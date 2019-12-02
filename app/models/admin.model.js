@@ -8,8 +8,6 @@ const AdminSchema = mongoose.Schema({
   password: String,
   passwordHash: String,
   displayName: String,
-  phone: String,
-  birthday: Date,
 },{
   timestamps: true
 });
