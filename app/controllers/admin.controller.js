@@ -12,7 +12,7 @@ exports.findAll = async (req, res) => {
       const {displayName, email} = item;
       return { displayName, email };
     })
-    res.status(200).send({ data })
+    res.status(200).send({ admin: data })
   }
 
   catch (err) {
