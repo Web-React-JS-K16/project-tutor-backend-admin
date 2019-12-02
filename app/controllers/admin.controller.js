@@ -8,13 +8,12 @@ const jwtSecretConfig = require("../../config/jwt-secret.config");
 exports.findAll = async (req, res) => {
   try {
     const admin = await Admin.find();
-    const data = admin.map((item) =>{
+    const data =  admin.map((item) =>{
       const {displayName, email} = item;
       return { displayName, email };
     })
-    res.status(200).send({ admin: data })
+    res.status(200).json({ admin: data })
   }
-
   catch (err) {
     console.log("err: ", err)
     res.status(500).send({ message: "Có lỗi xảy ra" })
