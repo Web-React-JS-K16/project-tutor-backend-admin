@@ -20,11 +20,11 @@ const UserSchema = mongoose.Schema(
       default: EUserType.STUDENT
     },
     gender: String,
-    isBlock:{
+    isBlock: {
       type: Boolean,
       default: false
     },
-    isActived:{
+    isActive: {
       type: Boolean,
       default: false
     }
@@ -43,10 +43,6 @@ UserSchema.methods.validatePassword = function(password) {
     return false;
   }
   return bcrypt.compareSync(password, this.passwordHash);
-};
-
-UserSchema.methods.setAvatar = function(avatar) {
-  this.avatar = avatar;
 };
 
 module.exports = mongoose.model('User', UserSchema);
