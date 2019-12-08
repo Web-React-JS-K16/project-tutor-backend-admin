@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const MajorSchema = mongoose.Schema({
-    name: String,
+    name: String
 }, {
     timestamps: true
 })
