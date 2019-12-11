@@ -12,7 +12,7 @@ exports.findAll = async (req, res) => {
                 }
 
                 if (data) {
-                    return res.status(200).json({ tags: data })
+                    return res.status(200).json({ data: data })
                 }
 
                 return res.status(400).json({ message: "Không có tag nào." })
@@ -32,12 +32,12 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
     const { _id } = req.params
 
-    if(!_id) {
-        return res.status(400).json({message: "Id tag không được rỗng"})
+    if (!_id) {
+        return res.status(400).json({ message: "Id tag không được rỗng" })
     }
 
     try {
-        await Tag.findOne({_id})
+        await Tag.findOne({ _id })
             .populate('majorId')
             .exec((err, data) => {
                 if (err) {
@@ -46,7 +46,7 @@ exports.findOne = async (req, res) => {
                 }
 
                 if (data) {
-                    return res.status(200).json({ tags: data })
+                    return res.status(200).json({ data: data })
                 }
 
                 return res.status(400).json({ message: "Không có tag nào." })
@@ -54,7 +54,7 @@ exports.findOne = async (req, res) => {
     }
     catch (err) {
         console.log('err: ', err)
-        return res.status(500).json({message: "Đã có lỗi xảy ra."})
+        return res.status(500).json({ message: "Đã có lỗi xảy ra." })
     }
 }
 
@@ -64,23 +64,23 @@ exports.findOne = async (req, res) => {
  */
 
 exports.create = async (req, res) => {
-    
-    const { name, majorId } = req.body
 
-    if(!name) {
-        return res.status(400).json({message: "Tên tag không được rỗng"})
+    const { name, majorId } = req.body
+    console.log(name, majorId)
+    if (!name) {
+        return res.status(400).json({ message: "Tên tag không được rỗng" })
     }
 
-    if(!majorId) {
-        return res.status(400).json({message: "Ngành học không được rỗng"})
+    if (!majorId) {
+        return res.status(400).json({ message: "Ngành học không được rỗng" })
     }
 
     try {
 
-        const tag = await Tag.findOne({name})
+        const tag = await Tag.findOne({ name })
 
-        if(tag) {
-            return res.status(400).json({message: "Tên tag đã tồn tại"})
+        if (tag) {
+            return res.status(400).json({ message: "Tên tag đã tồn tại." })
         }
 
         const newTag = new Tag({
@@ -90,16 +90,27 @@ exports.create = async (req, res) => {
 
         const result = await newTag.save()
 
-        if(result) {
-            return res.status(200).json({message: "Tạo tag thành công."})
+        if (result) {
+            await Tag.findOne({ name: result.name })
+                .populate('majorId')
+                .exec((err, data) => {
+                    if (err) {
+                        console.log('err: ', err)
+                        return res.status(500).json({ message: "Đã có lỗi xảy ra." })
+                    }
+
+                    if (data) {
+                        return res.status(200).json({ message: "Tạo tag kĩ năng thành công.", data: data })
+                    }
+                })
         }
         else {
-            return res.status(200).json({message: "Tạo tag thất bại."})
+            return res.status(400).json({ message: "Tạo tag kĩ năng thất bại." })
         }
     }
     catch (err) {
         console.log('err: ', err)
-        return res.status(500).json({message: "Đã có lỗi xảy ra."})
+        return res.status(500).json({ message: "Đã có lỗi xảy ra." })
     }
 }
 
@@ -110,35 +121,45 @@ exports.create = async (req, res) => {
  */
 
 exports.update = async (req, res) => {
+    console.log(req.body)
     const { _id, name, majorId } = req.body
 
-    if(!_id) {
-        return res.status(400).json({message: "Id không được rỗng"})
+    if (!_id) {
+        return res.status(400).json({ message: "Id không được rỗng" })
     }
 
-    if(!name && !majorId) {
-        return res.status(400).json({message: "Tên tag hoặc ngành học không được rỗng"})
+    if (!name && !majorId) {
+        return res.status(400).json({ message: "Tên tag hoặc ngành học không được rỗng" })
     }
 
     try {
-        
-        const tag = await Tag.findOne({_id})
 
-        if(tag) {
+        const tag = await Tag.findOne({ _id })
 
-            const result = await Tag.update({_id}, {name: name || tag.name, majorId: majorId || tag.majorId})
-            console.log(result)
-            if(result) {
-                return res.status(200).json({message: "Cập nhật tag thành công."})
+        if (tag) {
+
+            const result = await Tag.findOneAndUpdate({ _id }, { name: name || tag.name, majorId: majorId || tag.majorId })
+            if (result) {
+                await Tag.findOne({ _id: result._id })
+                    .populate('majorId')
+                    .exec((err, data) => {
+                        if (err) {
+                            console.log('err: ', err)
+                            return res.status(500).json({ message: "Đã có lỗi xảy ra." })
+                        }
+                        if (data) {
+                            return res.status(200).json({ message: "Cập nhật tag kĩ năng thành công.", data: data })
+                        }
+                    })
             }
         }
         else {
-            return res.status(200).json({message: "Không tìm thấy tag."})
+            return res.status(400).json({ message: "Không tìm thấy tag." })
         }
     }
     catch (err) {
         console.log('err: ', err)
-        return res.status(500).json({message: "Đã có lỗi xảy ra."})
+        return res.status(500).json({ message: "Đã có lỗi xảy ra." })
     }
 }
 
@@ -148,25 +169,23 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
     const { _id } = req.body
-
-    if(!_id) {
-        return res.status(400).json({message: "Id không được rỗng"})
+    if (!_id) {
+        return res.status(400).json({ message: "Id không được rỗng" })
     }
 
     try {
-        
-        const result = await Tag.findOneAndDelete({_id})
 
-        if(result) {
-            return res.status(200).json({message: "Xóa tag thành công."})
+        const result = await Tag.findOneAndDelete({ _id })
+        if (result) {
+            return res.status(200).json({ message: "Xóa tag kĩ năng thành công.", data: result })
         }
         else {
-            return res.status(200).json({message: "Không tìm thấy tag."})
+            return res.status(400).json({ message: "Không tìm thấy tag." })
         }
     }
     catch (err) {
         console.log('err: ', err)
-        return res.status(500).json({message: "Đã có lỗi xảy ra."})
+        return res.status(500).json({ message: "Đã có lỗi xảy ra." })
     }
 
- }
+}

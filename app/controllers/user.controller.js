@@ -3,13 +3,33 @@ const Teacher = require("../models/teacher.model");
 const User = require("../models/user.model");
 const EUserTypes = require("../enums/EUserTypes")
 
+exports.findAll = async (req, res) => {
+  try {
+
+    const users = await User.find({}, {password: 0, passwordHash: 0})
+
+    if(users) {
+      return res.status(200).json({data: users})
+    }
+
+    else {
+      return res.status(400).json({message: "Không tồn tại tài khoản."})
+    }
+
+  }
+  catch (err) {
+    console.log('err: ', err);
+    return res.status(500).json({message: "Đã có lỗi xảy ra"})
+  }
+}
+
 /**
  * User register
  * @param {String} body._id 
  * _id is id of User not _id of Student or Teacher
  */
 exports.getInforUser = async (req, res) => {
-    const { _id } = req.body
+  const { _id } = req.params
   
     try {
   
@@ -30,7 +50,7 @@ exports.getInforUser = async (req, res) => {
               }
   
               if(data) {
-                return res.status(200).json({ user: data })
+                return res.status(200).json({ data: data })
               }
               
               return  res.status(400).json({ message: "Tài khoản không tồn tại." });
@@ -48,7 +68,7 @@ exports.getInforUser = async (req, res) => {
                 console.log('err: ', err)
                 res.status(500).json({ message: "Có lỗi xảy ra" });
               }
-              return res.status(200).json({ user: data })
+              return res.status(200).json({ data: data })
             });
         }
       }

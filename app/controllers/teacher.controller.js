@@ -8,7 +8,7 @@ exports.findAll = async (req, res) => {
         .populate({
           path: 'userId',
           // match: { isBlock: false },
-          // select: ['-password', '-passwordHash']
+          select: ['-password', '-passwordHash']
         })
         .exec((err, data) => {
           if (err) {
@@ -24,7 +24,7 @@ exports.findAll = async (req, res) => {
           // }
           // return res.status(200).json({ users: users })
   
-          return res.status(200).json({ users: data })
+          return res.status(200).json({ data: data })
         });
   
     }

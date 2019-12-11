@@ -6,7 +6,7 @@ exports.findAll = async (req, res) => {
         const majors = await Major.find();
 
         if(majors) {
-            return res.status(200).json({majors: majors})
+            return res.status(200).json({data: majors})
         }
         
         return res.status(400).json({message: "Không có ngành học nào."})
@@ -33,7 +33,7 @@ exports.findOne = async (req, res) => {
         const major = await Major.findOne({_id});
 
         if(major) {
-            return res.status(200).json({major: major})
+            return res.status(200).json({data: major})
         }
         
         return res.status(400).json({message: "Không có ngành học nào."})
@@ -71,10 +71,10 @@ exports.create = async (req, res) => {
         const result = await newMajor.save()
 
         if(result) {
-            return res.status(200).json({message: "Tạo ngành học thành công."})
+            return res.status(200).json({message: "Tạo ngành học thành công.", data: result})
         }
         else {
-            return res.status(200).json({message: "Tạo ngành học thất bại."})
+            return res.status(400).json({message: "Tạo ngành học thất bại."})
         }
     }
     catch (err) {
@@ -107,7 +107,7 @@ exports.create = async (req, res) => {
             return res.status(200).json({message: "Cập nhật ngành học thành công."})
         }
         else {
-            return res.status(200).json({message: "Không tìm thấy ngành học."})
+            return res.status(400).json({message: "Không tìm thấy ngành học."})
         }
     }
     catch (err) {
@@ -132,7 +132,7 @@ exports.create = async (req, res) => {
         const tag = await Tag.findOne({majorId: _id})
 
         if(tag) {
-            return res.status(200).json({message: "Không thể xóa ngành học vì tag có tồn tại trong database."})
+            return res.status(400).json({message: "Không thể xóa ngành học vì tag có tồn tại trong database."})
         }
 
         const result = await Major.findOneAndDelete({_id})
@@ -141,7 +141,7 @@ exports.create = async (req, res) => {
             return res.status(200).json({message: "Xóa ngành học thành công."})
         }
         else {
-            return res.status(200).json({message: "Không tìm thấy ngành học."})
+            return res.status(400).json({message: "Không tìm thấy ngành học."})
         }
     }
     catch (err) {
