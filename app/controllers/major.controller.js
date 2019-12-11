@@ -30,10 +30,10 @@ exports.findOne = async (req, res) => {
     }
 
     try {
-        const major = await Major.findOne({_id});
+        const data = await Major.findOne({_id});
 
-        if(major) {
-            return res.status(200).json({data: major})
+        if(data) {
+            return res.status(200).json({data})
         }
         
         return res.status(400).json({message: "Không có ngành học nào."})

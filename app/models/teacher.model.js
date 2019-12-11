@@ -11,17 +11,11 @@ const TeacherSchema = mongoose.Schema(
     ratings: { type: Number, default: 0 },
     tags: [
       {
-        tagId: {
+        _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Tag'
-        },
-        name: String,
-        major: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Major'
         }
-      }
-    ],
+      }],
     jobs: { type: Number, default: 0 },
     hoursWorked: { type: Number, default: 0 },
     userId: {
@@ -34,11 +28,11 @@ const TeacherSchema = mongoose.Schema(
   }
 );
 
-TeacherSchema.methods.setUserId = function(userId) {
+TeacherSchema.methods.setUserId = function (userId) {
   this.userId = userId;
 };
 
-TeacherSchema.methods.setTags = function(tags) {
+TeacherSchema.methods.setTags = function (tags) {
   this.tags = tags;
 };
 

@@ -3,20 +3,22 @@ const Major = require("../models/major.model")
 
 exports.findAll = async (req, res) => {
     try {
-        await Tag.find()
+        let { limit, offset } = req.params
+
+        limit = parseInt(limit)
+        offset = parseInt(offset)
+
+        const length = await Tag.find().countDocuments()
+
+        const data = await Tag.find()
+            .limit(limit)
+            .skip((offset - 1)*limit)
             .populate('majorId')
-            .exec((err, data) => {
-                if (err) {
-                    console.log('err: ', err)
-                    return res.status(500).json({ message: "Đã có lỗi xảy ra." })
-                }
 
-                if (data) {
-                    return res.status(200).json({ data: data })
-                }
-
-                return res.status(400).json({ message: "Không có tag nào." })
-            })
+        if (data) {
+            return res.status(200).json({ data, length })
+        }
+        return res.status(400).json({ message: "Không có tag nào." })
     }
     catch (err) {
         console.log('err: ', err)
@@ -37,20 +39,13 @@ exports.findOne = async (req, res) => {
     }
 
     try {
-        await Tag.findOne({ _id })
+        const data = await Tag.findOne({ _id })
             .populate('majorId')
-            .exec((err, data) => {
-                if (err) {
-                    console.log('err: ', err)
-                    return res.status(500).json({ message: "Đã có lỗi xảy ra." })
-                }
 
-                if (data) {
-                    return res.status(200).json({ data: data })
-                }
-
-                return res.status(400).json({ message: "Không có tag nào." })
-            })
+        if (data) {
+            return res.status(200).json({ data })
+        }
+        return res.status(400).json({ message: "Không có tồn tại kĩ năng." })
     }
     catch (err) {
         console.log('err: ', err)
@@ -91,18 +86,11 @@ exports.create = async (req, res) => {
         const result = await newTag.save()
 
         if (result) {
-            await Tag.findOne({ name: result.name })
+            const data = await Tag.findOne({ name: result.name })
                 .populate('majorId')
-                .exec((err, data) => {
-                    if (err) {
-                        console.log('err: ', err)
-                        return res.status(500).json({ message: "Đã có lỗi xảy ra." })
-                    }
-
-                    if (data) {
-                        return res.status(200).json({ message: "Tạo tag kĩ năng thành công.", data: data })
-                    }
-                })
+            if (data) {
+                return res.status(200).json({ message: "Tạo tag kĩ năng thành công.", data })
+            }
         }
         else {
             return res.status(400).json({ message: "Tạo tag kĩ năng thất bại." })
@@ -140,17 +128,12 @@ exports.update = async (req, res) => {
 
             const result = await Tag.findOneAndUpdate({ _id }, { name: name || tag.name, majorId: majorId || tag.majorId })
             if (result) {
-                await Tag.findOne({ _id: result._id })
+                const data = await Tag.findOne({ _id: result._id })
                     .populate('majorId')
-                    .exec((err, data) => {
-                        if (err) {
-                            console.log('err: ', err)
-                            return res.status(500).json({ message: "Đã có lỗi xảy ra." })
-                        }
-                        if (data) {
-                            return res.status(200).json({ message: "Cập nhật tag kĩ năng thành công.", data: data })
-                        }
-                    })
+
+                if (data) {
+                    return res.status(200).json({ message: "Cập nhật tag kĩ năng thành công.", data })
+                }
             }
         }
         else {
