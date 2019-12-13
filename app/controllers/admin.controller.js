@@ -89,13 +89,11 @@ exports.login = async (req, res) => {
  */
 exports.blockAccount = async (req, res) => {
   const { _id } = req.body
-
   try {
-
     const user = await User.findOneAndUpdate({ _id }, { isBlock: true }, { new: true });
 
     if (user) {
-      return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã bị khóa." })
+      return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã bị khóa.", data: {userId: user} })
     }
 
     else {
@@ -117,9 +115,8 @@ exports.upBlockAccount = async (req, res) => {
 
   try {
     const user = await User.findOneAndUpdate({ _id }, { isBlock: false }, { new: true });
-
     if (user) {
-      return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa." })
+      return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa.",data: {userId: user} })
     }
 
     else {
