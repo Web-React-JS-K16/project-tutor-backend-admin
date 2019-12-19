@@ -41,7 +41,8 @@ exports.getInforUser = async (req, res) => {
         const data = await Teacher.findOne({ userId: _id })
           .populate({
             path: 'userId',
-            // select: ['-password', '-passwordHash']
+            select: ['-password', '-passwordHash'],
+            populate: [{ path: 'district' }, {path: 'city'}],
           })
           .populate('tags._id')
 
@@ -55,7 +56,8 @@ exports.getInforUser = async (req, res) => {
         const data = await Student.findOne({ userId: _id })
           .populate({
             path: 'userId',
-            // select: ['-password', '-passwordHash']
+            select: ['-password', '-passwordHash'],
+            populate: [{ path: 'district' }, {path: 'city'}],
           })
         return res.status(200).json({ data })
       }

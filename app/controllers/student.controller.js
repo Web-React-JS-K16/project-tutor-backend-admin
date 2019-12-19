@@ -16,7 +16,7 @@ exports.findAll = async (req, res) => {
       .populate({
         path: 'userId',
         // match: { isBlock: false },
-        select: ['-password', '-passwordHash']
+        select: ['-password', '-passwordHash'],
       })
 
     //Get account with isBlock === false 

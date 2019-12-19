@@ -1,5 +1,7 @@
 const Teacher = require("../models/teacher.model");
 const User = require("../models/user.model");
+const City = require("../models/city.model")
+const District = require("../models/district.model")
 
 //Get all teacher
 exports.findAll = async (req, res) => {
@@ -17,7 +19,7 @@ exports.findAll = async (req, res) => {
       .populate({
         path: 'userId',
         // match: { isBlock: false },
-        select: ['-password', '-passwordHash']
+        select: ['-password', '-passwordHash'],
       })
       .populate('tags._id')
 
