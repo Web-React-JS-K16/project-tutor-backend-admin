@@ -1,4 +1,5 @@
 const Contract = require("../models/contract.model")
+const Helpers = require("./../helpers/helpers")
 
 exports.findAll = async (req, res) => {
     try {
@@ -69,15 +70,14 @@ exports.getDetail = async (req, res) => {
 exports.changeStatus = async (req, res) => {
     try {
         const { _id, status } = req.body
-        console.log(_id, status)
-        // await Contract.findOneAndUpdate({_id}, {status}, {new: true})
 
         const data = await Contract.findOneAndUpdate({ _id }, {
             status,
+            endDate: new Date(),
             $push: { statusHistory: { time: new Date(), status: status } }
         }, { new: true })
         if (data) {
-            const _message = data.status === 5 ? "Đã hoàn tất hợp đồng" : "Đã hoàn tiền cho học sinh"
+            const _message = data.status === 5 ? "Đã hoàn tất hợp đồng" : "Đã hoàn tiền cho học sinh,Hợp đồng đã bị hủy"
             return res.status(200).json({ data, _message })
         }
         else {
@@ -99,7 +99,7 @@ exports.StatictisByDate = async (req, res) => {
                 $match: {
                     $and: [
                         {
-                            createdAt: {
+                            endDate: {
                                 $gte: new Date(fromDate), $lte: new Date(endDate),
                             }
                         },
@@ -110,19 +110,230 @@ exports.StatictisByDate = async (req, res) => {
             },
             {
                 $group: {
-
-                    _id: { $dateToString: { format: "%d-%m-%Y", date: "$createdAt" } },
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
                     total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
                     count: { $sum: 1 },
                 }
             },
             {
-                $sort: { total: -1 }
+                $sort: {_id: 1}
             },
             {
                 $match: { count: { $gt: 0 } },
             }
         ])
+
+        if (data.length > 0) {
+            return res.status(200).json({ data })
+        }
+        else {
+            return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
+        }
+    } catch (err) {
+        console.log('err: ', err)
+        return res.status(500).json({ message: "Có lỗi xảy ra." })
+    }
+}
+
+exports.StatictisByMonth = async (req, res) => {
+    try {
+        const { fromDate, endDate } = req.params
+        const fromMonth = parseInt(new Date(fromDate).getMonth() + 1)
+        const endMonth = parseInt(new Date(endDate).getMonth() + 1)
+        const fromYear = parseInt(new Date(fromDate).getFullYear())
+        const endYear = parseInt(new Date(endDate).getFullYear() )
+
+        const data = await Contract.aggregate([
+            {
+                $project:
+                  {
+                    year: { $year: "$endDate" },
+                    month: { $month: "$endDate" },
+                    costPerHour: "$costPerHour",
+                    endDate: "$endDate",
+                    workingHour: "$workingHour",
+                    status: "$status",
+                    isPaid: "$isPaid"
+                  }
+              },
+            {
+                $match: {
+                    $and: [
+                        {
+                            month: {
+                                $gte: fromMonth, $lte: endMonth,
+                            }
+                        },
+                        { 
+                            year: {
+                                $gte: fromYear, $lte: endYear,
+                            }
+                        },
+                        { status: 5 },
+                        { isPaid: true }
+                    ]
+                },
+            },
+            {
+                $group: {
+                    _id:  {year:"$year", month:"$month"},
+                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
+                    count: { $sum: 1 },
+                }
+            },
+            {
+                $sort: {_id: 1}
+            },
+            {
+                $match: { count: { $gt: 0 } },
+            }
+        ])
+
+        const newData = data.map(item => {
+            const { _id } = item
+            return {
+                ...item,
+                _id: new Date(_id.year, _id.month),
+            }
+        })
+
+        if (newData.length > 0) {
+            return res.status(200).json({ data: newData })
+        }
+        else {
+            return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
+        }
+    } catch (err) {
+        console.log('err: ', err)
+        return res.status(500).json({ message: "Có lỗi xảy ra." })
+    }
+}
+
+exports.StatictisByWeek = async (req, res) => {
+    try {
+        const { fromDate, endDate } = req.params
+        const fromWeek = Helpers.getNumberOfWeek(fromDate)
+        const endWeek = Helpers.getNumberOfWeek(endDate)
+        const fromYear = parseInt(new Date(fromDate).getFullYear())
+        const endYear = parseInt(new Date(endDate).getFullYear() )
+
+        const data = await Contract.aggregate([
+            {
+                $project:
+                  {
+                    year: { $year: "$endDate" },
+                    week: { $week: "$endDate" },
+                    costPerHour: "$costPerHour",
+                    endDate: "$endDate",
+                    workingHour: "$workingHour",
+                    status: "$status",
+                    isPaid: "$isPaid"
+                  }
+              },
+            {
+                $match: {
+                    $and: [
+                        {
+                            week: {
+                                $gte: fromWeek, $lte: endWeek,
+                            }
+                        },
+                        { 
+                            year: {
+                                $gte: fromYear, $lte: endYear,
+                            }
+                        },
+                        { status: 5 },
+                        { isPaid: true }
+                    ]
+                },
+            },
+            {
+                $group: {
+                    _id:  {year:"$year", week:"$week"},
+                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
+                    count: { $sum: 1 },
+                }
+            },
+            {
+                $sort: {_id: 1}
+            },
+            {
+                $match: { count: { $gt: 0 } },
+            }
+        ])
+
+        const newData = data.map(item => {
+            const { _id } = item
+            return {
+                ...item,
+                _id: `${_id.year}-${_id.week}`,
+            }
+        })
+
+        if (newData.length > 0) {
+            return res.status(200).json({ data: newData })
+        }
+        else {
+            return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
+        }
+    } catch (err) {
+        console.log('err: ', err)
+        return res.status(500).json({ message: "Có lỗi xảy ra." })
+    }
+}
+
+exports.StatictisByYear = async (req, res) => {
+    try {
+        const { fromYear, endYear } = req.params
+        
+        const data = await Contract.aggregate([
+            {
+                $project:
+                  {
+                    year: { $year: "$endDate" },
+                    costPerHour: "$costPerHour",
+                    endDate: "$endDate",
+                    workingHour: "$workingHour",
+                    status: "$status",
+                    isPaid: "$isPaid"
+                  }
+              },
+            {
+                $match: {
+                    $and: [
+                        { 
+                            year: {
+                                $gte: parseInt(fromYear), $lte: parseInt(endYear),
+                            }
+                        },
+                        { status: 5 },
+                        { isPaid: true }
+                    ]
+                },
+            },
+            {
+                $group: {
+                    _id:  {year:"$year"},
+                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
+                    count: { $sum: 1 },
+                }
+            },
+            {
+                $sort: {_id: 1}
+            },
+            {
+                $match: { count: { $gt: 0 } },
+            }
+        ])
+
+        // const newData = data.map(item => {
+        //     const { _id } = item
+        //     return {
+        //         ...item,
+        //         _id: `${_id.year}-${_id.week}`,
+        //     }
+        // })
 
         if (data.length > 0) {
             return res.status(200).json({ data })
