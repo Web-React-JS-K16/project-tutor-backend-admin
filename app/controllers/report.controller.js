@@ -59,11 +59,11 @@ exports.getDetail = async (req, res) => {
                 }],
             })
 
-        if (data) {
+        if (data.length > 0) {
             return res.status(200).json({ data })
         }
         else {
-            return res.status(400).json({ message: "Không tồn tại khiếu nại, tố cáo." })
+            return res.status(400).json({ message: "Không tìm thấy dữ liệu." })
         }
 
     } catch (err) {

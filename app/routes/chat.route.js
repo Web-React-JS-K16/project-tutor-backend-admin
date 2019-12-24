@@ -2,6 +2,6 @@ const express = require("express");
 const app = express();
 const chats = require("../controllers/chat.controller");
 
-app.get('/', chats.findAll)
+app.post('/', chats.findAll)
 
 module.exports = app;

@@ -42,10 +42,10 @@ exports.findOne = async (req, res) => {
         const data = await Tag.findOne({ _id })
             .populate('majorId')
 
-        if (data) {
+        if (data.length > 0) {
             return res.status(200).json({ data })
         }
-        return res.status(400).json({ message: "Không có tồn tại kĩ năng." })
+        return res.status(400).json({ message: "Không tìm thấy dữ liệu." })
     }
     catch (err) {
         console.log('err: ', err)

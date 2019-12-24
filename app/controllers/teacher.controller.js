@@ -31,11 +31,11 @@ exports.findAll = async (req, res) => {
     // }
     // return res.status(200).json({ users: users })
 
-    if (data) {
+    if (data.length > 0) {
       return res.status(200).json({ data, length })
     }
     else {
-      return res.status(400).json({ message: "Không tồn tại giáo viên." });
+      return res.status(400).json({ message: "Không tìm thấy dữ liệu." });
     }
 
   }

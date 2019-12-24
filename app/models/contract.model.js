@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 const ContractSchema = mongoose.Schema(
   {
     name: String,
+    statusHistory: {
+      type: Array,
+      default: { time: new Date(), status: eContractTypes.WAIT_FOR_PAYMENT }
+    },
     status: {
       type: Number,
       default: eContractTypes.NOT_START
