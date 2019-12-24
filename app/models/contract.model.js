@@ -10,7 +10,7 @@ const ContractSchema = mongoose.Schema(
     },
     status: {
       type: Number,
-      default: eContractTypes.NOT_START
+      default: eContractTypes.WAIT_FOR_PAYMENT
     },
     isPaid: {
       type: Boolean,
@@ -26,16 +26,15 @@ const ContractSchema = mongoose.Schema(
       ref: 'User'
     },
     startDate: {
-      type: mongoose.Schema.Types.Date,
-      default: new Date()
+      type: mongoose.Schema.Types.Date
+      // default: new Date()
     },
     endDate: {
-      type: mongoose.Schema.Types.Date,
+      type: mongoose.Schema.Types.Date
       // default: new Date()
     },
     costPerHour: { type: mongoose.Schema.Types.Decimal128, default: 0 },
-    workingHour: { type: Number, default: 0 },
-    rating: { type: Number, default: null },
+    workingHour: { type: Number, default: 0 }
   },
   {
     timestamps: true

@@ -11,11 +11,6 @@ const TeacherSchema = mongoose.Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Tag'
-        },
-        name: String,
-        majorId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Major'
         }
       }
     ],
