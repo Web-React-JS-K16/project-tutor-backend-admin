@@ -25,6 +25,14 @@ const ContractSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
+    tags: [
+      {
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Tag'
+        },
+      }
+    ],
     startDate: {
       type: mongoose.Schema.Types.Date,
       default: new Date()

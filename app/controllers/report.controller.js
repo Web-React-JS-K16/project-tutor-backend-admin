@@ -14,6 +14,9 @@ exports.findAll = async (req, res) => {
         const data = await Report.find()
             .limit(limit)
             .skip((offset - 1) * limit)
+            .sort({
+                createdAt: -1
+            })
             .populate({
                 path: 'contract',
                 populate: [{
