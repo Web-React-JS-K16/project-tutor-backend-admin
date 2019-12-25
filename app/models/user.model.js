@@ -27,7 +27,15 @@ const UserSchema = mongoose.Schema(
     isActive: {
       type: Boolean,
       default: false
-    }
+    },
+    city: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'City'
+    },
+    district: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'District'
+    },
   },
   {
     timestamps: true

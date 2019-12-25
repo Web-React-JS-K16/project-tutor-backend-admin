@@ -107,7 +107,7 @@ exports.create = async (req, res) => {
             return res.status(200).json({message: "Cập nhật ngành học thành công."})
         }
         else {
-            return res.status(400).json({message: "Không tìm thấy ngành học."})
+            return res.status(400).json({message: "Không tìm thấy dữ liệu."})
         }
     }
     catch (err) {
@@ -141,7 +141,7 @@ exports.create = async (req, res) => {
             return res.status(200).json({message: "Xóa ngành học thành công."})
         }
         else {
-            return res.status(400).json({message: "Không tìm thấy ngành học."})
+            return res.status(400).json({message: "Không tìm thấy dữ liệu."})
         }
     }
     catch (err) {

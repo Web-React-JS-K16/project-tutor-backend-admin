@@ -5,7 +5,8 @@ const ReportSchema = mongoose.Schema({
     contract: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Contract'
-    }
+    },
+    content: String
 }, {
     timestamps: true
 })

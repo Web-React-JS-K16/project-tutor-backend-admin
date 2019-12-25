@@ -1,15 +1,22 @@
 const mongoose = require('mongoose');
 
 const ChatSchema = mongoose.Schema({
-    message: String,
+    room: String,
     teacher: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Teacher'
+        ref: 'User'
     },
     student: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Student'
+        ref: 'User'
     },
+    message: [
+        {
+            time: mongoose.Schema.Types.Date,
+            content: String,
+            from: mongoose.Schema.Types.ObjectId
+        }
+    ]
 }, {
     timestamps: true
 })

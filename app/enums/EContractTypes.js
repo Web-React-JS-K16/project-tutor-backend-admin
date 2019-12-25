@@ -1,6 +1,8 @@
 module.exports = {
-    NOT_START: 0,
-    VALID: 1,
-    END: 2,
-    CANCEL: 3
+   WAIT_FOR_PAYMENT: 0,
+   WAIT_FOR_ACCEPTANCE: 1,
+   IS_VALID: 2,
+   IS_CANCELLED: 3,
+   IS_COMPLETED_BY_STUDENT: 4,
+   IS_COMPLETED_BY_ADMIN: 5
 }

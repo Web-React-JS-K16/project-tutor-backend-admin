@@ -16,7 +16,7 @@ exports.findAll = async (req, res) => {
       .populate({
         path: 'userId',
         // match: { isBlock: false },
-        select: ['-password', '-passwordHash']
+        select: ['-password', '-passwordHash'],
       })
 
     //Get account with isBlock === false 
@@ -26,11 +26,11 @@ exports.findAll = async (req, res) => {
     //   return res.status(400).json({ message: "Không tồn tại học sinh trong database." });
     // }
     // return res.status(200).json({ users: users })
-    if (data) {
+    if (data.length > 0) {
       return res.status(200).json({ data, length })
     }
     else {
-      return res.status(400).json({ message: "Không tồn tại học sinh." })
+      return res.status(400).json({ message: "Không tìm thấy dữ liệu." })
     }
 
 
