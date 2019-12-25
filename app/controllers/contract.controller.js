@@ -132,35 +132,9 @@ exports.changeStatusComplete = async (req, res) => {
 exports.StatictisByDate = async (req, res) => {
     try {
         const { fromDate, endDate } = req.params
-
-        const data = await Contract.aggregate([
-            {
-                $match: {
-                    $and: [
-                        {
-                            endDate: {
-                                $gte: new Date(fromDate), $lte: new Date(endDate),
-                            }
-                        },
-                        { status: 5 },
-                        { isPaid: true }
-                    ]
-                },
-            },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
-                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
-                    count: { $sum: 1 },
-                }
-            },
-            {
-                $sort: { _id: 1 }
-            },
-            {
-                $match: { count: { $gt: 0 } },
-            }
-        ])
+        let endNewDate = new Date(endDate)
+        endNewDate = endNewDate.setDate(endNewDate.getDate() + 1)
+        const data = await Contract.aggregate(Helpers.aggregate(fromDate, endNewDate))
 
         if (data.length > 0) {
             return res.status(200).json({ data })
@@ -177,67 +151,18 @@ exports.StatictisByDate = async (req, res) => {
 exports.StatictisByMonth = async (req, res) => {
     try {
         const { fromDate, endDate } = req.params
-        const fromMonth = parseInt(new Date(fromDate).getMonth() + 1)
+
         const endMonth = parseInt(new Date(endDate).getMonth() + 1)
-        const fromYear = parseInt(new Date(fromDate).getFullYear())
         const endYear = parseInt(new Date(endDate).getFullYear())
 
-        const data = await Contract.aggregate([
-            {
-                $project:
-                {
-                    year: { $year: "$endDate" },
-                    month: { $month: "$endDate" },
-                    costPerHour: "$costPerHour",
-                    endDate: "$endDate",
-                    workingHour: "$workingHour",
-                    status: "$status",
-                    isPaid: "$isPaid"
-                }
-            },
-            {
-                $match: {
-                    $and: [
-                        {
-                            month: {
-                                $gte: fromMonth, $lte: endMonth,
-                            }
-                        },
-                        {
-                            year: {
-                                $gte: fromYear, $lte: endYear,
-                            }
-                        },
-                        { status: 5 },
-                        { isPaid: true }
-                    ]
-                },
-            },
-            {
-                $group: {
-                    _id: { year: "$year", month: "$month" },
-                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
-                    count: { $sum: 1 },
-                }
-            },
-            {
-                $sort: { _id: 1 }
-            },
-            {
-                $match: { count: { $gt: 0 } },
-            }
-        ])
+        let fromNewDate = new Date(fromDate)
+        fromNewDate.setDate(1)
+        const endNewDate = new Date(endYear, endMonth)
+
+        const data = await Contract.aggregate(Helpers.aggregate(fromNewDate, endNewDate))
 
         if (data.length > 0) {
-            const newData = data.map(item => {
-                const { _id } = item
-                return {
-                    ...item,
-                    _id: new Date(_id.year, _id.month),
-                }
-            })
-
-            return res.status(200).json({ data: newData })
+            return res.status(200).json({ data })
         }
         else {
             return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
@@ -251,6 +176,7 @@ exports.StatictisByMonth = async (req, res) => {
 exports.StatictisByWeek = async (req, res) => {
     try {
         const { fromDate, endDate } = req.params
+
         const fromWeek = Helpers.getNumberOfWeek(fromDate)
         const endWeek = Helpers.getNumberOfWeek(endDate)
         const fromYear = parseInt(new Date(fromDate).getFullYear())
@@ -266,20 +192,18 @@ exports.StatictisByWeek = async (req, res) => {
                     endDate: "$endDate",
                     workingHour: "$workingHour",
                     status: "$status",
-                    isPaid: "$isPaid"
+                    isPaid: "$isPaid",
                 }
             },
             {
                 $match: {
                     $and: [
                         {
-                            week: {
-                                $gte: fromWeek, $lte: endWeek,
-                            }
-                        },
-                        {
                             year: {
-                                $gte: fromYear, $lte: endYear,
+                                $gte: fromYear, $lte: endYear
+                            },
+                            week: {
+                                $gte: fromWeek, $lte: endWeek
                             }
                         },
                         { status: 5 },
@@ -388,7 +312,7 @@ exports.StatictisSkillByDate = async (req, res) => {
         } : null
 
         const data = await Contract.aggregate([
-           Helpers.project,
+            Helpers.project,
             {
                 $match: {
                     $and: [
@@ -406,7 +330,7 @@ exports.StatictisSkillByDate = async (req, res) => {
         ])
 
         if (data.length > 0) {
-            return res.status(200).json({ data: Helpers.handleData({data}) })
+            return res.status(200).json({ data: Helpers.handleData({ data }) })
         }
         else {
             return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
@@ -419,82 +343,38 @@ exports.StatictisSkillByDate = async (req, res) => {
 
 exports.StatictisSkillByWeek = async (req, res) => {
     try {
-        const { endDate, mode } = req.params
-
-        const objectFilter = {}
-        endDate !== 'null' ? objectFilter.endDate = {
-            $eq: endDate
-        } : null
-
-
-
+        const { endDate } = req.params
+        const numberWeek = Helpers.getNumberOfWeek(endDate)
+        const numberYear = parseInt(new Date(endDate).getFullYear())
         const data = await Contract.aggregate([
-            {
-                $project: {
-                    endDate: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
-                    status: "$status",
-                    isPaid: "$isPaid",
-                    costPerHour: "$costPerHour",
-                    workingHour: "$workingHour",
-                    tags: "$tags"
-                }
-            },
+            Helpers.project,
             {
                 $match: {
                     $and: [
-                        objectFilter,
+                        {
+                            week: {
+                                $eq: numberWeek
+                            }
+                        },
+                        {
+                            year: {
+                                $eq: numberYear
+                            }
+                        },
                         { status: 5 },
                         { isPaid: true },
                         { tags: { $ne: null } }
                     ]
                 },
             },
-            {
-                $group: {
-                    _id: "$tags._id",
-                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
-                    count: { $sum: 1 },
-                }
-            },
-            {
-                $lookup:
-                {
-                    from: "tags",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: 'tags'
-                }
-            },
-            {
-                $sort: { _id: 1 }
-            },
-            {
-                $match: { count: { $gt: 0 }, _id: { $ne: [] } },
-            }
+            Helpers.group,
+            Helpers.lookup,
+            Helpers.sort,
+            Helpers.matchResult,
         ])
 
         if (data.length > 0) {
-            let newData = []
-            data.map((item) => {
-                item.tags.map((tag) => {
-                    let _tag = {
-                        _id: tag._id,
-                        name: tag.name,
-                        cost: item.total
-                    }
-                    _tag.cost = parseFloat(_tag.cost)
-                    if (newData.some(el => el._id.toString() === _tag._id.toString())) {
-                        const index = newData.findIndex(x => x._id.toString() === _tag._id.toString());
-                        _tag.cost = newData[index].cost + _tag.cost
-                    }
-
-                    newData.push(_tag)
-
-                })
-            })
-
-            newData = newData.sort((a, b) => b.cost - a.cost).slice(0, 10)
-            return res.status(200).json({ data: newData })
+            return res.status(200).json({ data: Helpers.handleData({ data }) })
         }
         else {
             return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
@@ -507,82 +387,33 @@ exports.StatictisSkillByWeek = async (req, res) => {
 
 exports.StatictisSkillByMonth = async (req, res) => {
     try {
-        const { endDate, mode } = req.params
-
-        const objectFilter = {}
-        endDate !== 'null' ? objectFilter.endDate = {
-            $eq: endDate
-        } : null
-
-
-
+        const { endDate } = req.params
+        let endNewDate = new Date(endDate)
+        endNewDate.setMonth(endNewDate.getMonth() + 1)
         const data = await Contract.aggregate([
-            {
-                $project: {
-                    endDate: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
-                    status: "$status",
-                    isPaid: "$isPaid",
-                    costPerHour: "$costPerHour",
-                    workingHour: "$workingHour",
-                    tags: "$tags"
-                }
-            },
+            Helpers.project,
             {
                 $match: {
                     $and: [
-                        objectFilter,
+                        {
+                            endDate: {
+                                $gte: endDate, $lte: endNewDate.toISOString().slice(0,10),
+                            }
+                        },
                         { status: 5 },
                         { isPaid: true },
                         { tags: { $ne: null } }
                     ]
                 },
             },
-            {
-                $group: {
-                    _id: "$tags._id",
-                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
-                    count: { $sum: 1 },
-                }
-            },
-            {
-                $lookup:
-                {
-                    from: "tags",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: 'tags'
-                }
-            },
-            {
-                $sort: { _id: 1 }
-            },
-            {
-                $match: { count: { $gt: 0 }, _id: { $ne: [] } },
-            }
+            Helpers.group,
+            Helpers.lookup,
+            Helpers.sort,
+            Helpers.matchResult,
         ])
 
         if (data.length > 0) {
-            let newData = []
-            data.map((item) => {
-                item.tags.map((tag) => {
-                    let _tag = {
-                        _id: tag._id,
-                        name: tag.name,
-                        cost: item.total
-                    }
-                    _tag.cost = parseFloat(_tag.cost)
-                    if (newData.some(el => el._id.toString() === _tag._id.toString())) {
-                        const index = newData.findIndex(x => x._id.toString() === _tag._id.toString());
-                        _tag.cost = newData[index].cost + _tag.cost
-                    }
-
-                    newData.push(_tag)
-
-                })
-            })
-
-            newData = newData.sort((a, b) => b.cost - a.cost).slice(0, 10)
-            return res.status(200).json({ data: newData })
+            return res.status(200).json({ data: Helpers.handleData({ data }) })
         }
         else {
             return res.status(400).json({ message: "Không tìm thấy dữ liệu" })
@@ -595,82 +426,34 @@ exports.StatictisSkillByMonth = async (req, res) => {
 
 exports.StatictisSkillByThreeMonth = async (req, res) => {
     try {
-        const { endDate, mode } = req.params
-
-        const objectFilter = {}
-        endDate !== 'null' ? objectFilter.endDate = {
-            $eq: endDate
-        } : null
-
-
+        const { endDate } = req.params
+        let endNewDate = new Date(endDate)
+        endNewDate.setMonth(endNewDate.getMonth() + 3)
 
         const data = await Contract.aggregate([
-            {
-                $project: {
-                    endDate: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
-                    status: "$status",
-                    isPaid: "$isPaid",
-                    costPerHour: "$costPerHour",
-                    workingHour: "$workingHour",
-                    tags: "$tags"
-                }
-            },
+            Helpers.project,
             {
                 $match: {
                     $and: [
-                        objectFilter,
+                        {
+                            endDate: {
+                                $gte: endDate, $lte: endNewDate.toISOString().slice(0,10),
+                            }
+                        },
                         { status: 5 },
                         { isPaid: true },
                         { tags: { $ne: null } }
                     ]
                 },
             },
-            {
-                $group: {
-                    _id: "$tags._id",
-                    total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
-                    count: { $sum: 1 },
-                }
-            },
-            {
-                $lookup:
-                {
-                    from: "tags",
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: 'tags'
-                }
-            },
-            {
-                $sort: { _id: 1 }
-            },
-            {
-                $match: { count: { $gt: 0 }, _id: { $ne: [] } },
-            }
+            Helpers.group,
+            Helpers.lookup,
+            Helpers.sort,
+            Helpers.matchResult,
         ])
 
         if (data.length > 0) {
-            let newData = []
-            data.map((item) => {
-                item.tags.map((tag) => {
-                    let _tag = {
-                        _id: tag._id,
-                        name: tag.name,
-                        cost: item.total
-                    }
-                    _tag.cost = parseFloat(_tag.cost)
-                    if (newData.some(el => el._id.toString() === _tag._id.toString())) {
-                        const index = newData.findIndex(x => x._id.toString() === _tag._id.toString());
-                        _tag.cost = newData[index].cost + _tag.cost
-                    }
-
-                    newData.push(_tag)
-
-                })
-            })
-
-            newData = newData.sort((a, b) => b.cost - a.cost).slice(0, 10)
-            return res.status(200).json({ data: newData })
+            return res.status(200).json({ data: Helpers.handleData({ data }) })
         }
         else {
             return res.status(400).json({ message: "Không tìm thấy dữ liệu" })

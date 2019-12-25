@@ -2,12 +2,14 @@ exports.getNumberOfWeek = (date) => {
     const today = new Date(date);
     const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
     const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    return Math.floor((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
 }
 
 exports.project = {
     $project: {
         endDate: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
+        year: { $year: "$endDate" },
+        week: { $week: "$endDate" },
         status: "$status",
         isPaid: "$isPaid",
         costPerHour: "$costPerHour",
@@ -65,3 +67,32 @@ exports.handleData = ({ data }) => {
     newData = newData.sort((a, b) => b.cost - a.cost).slice(0, 10)
     return newData
 }
+
+exports.aggregate = (fromNewDate, endNewDate) => ([
+    {
+        $match: {
+            $and: [
+                {
+                    endDate: {
+                        $gte: new Date(fromNewDate), $lte: new Date(endNewDate),
+                    }
+                },
+                { status: 5 },
+                { isPaid: true }
+            ]
+        }
+    },
+    {
+        $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$endDate" } },
+            total: { $sum: { $multiply: ["$costPerHour", "$workingHour"] } },
+            count: { $sum: 1 },
+        }
+    },
+    {
+        $sort: { _id: 1 },
+    },
+    {
+        $match: { count: { $gt: 0 } },
+    }
+])
