@@ -86,6 +86,7 @@ exports.changeStatus = async (req, res) => {
             $push: { statusHistory: { time: new Date(), status: status } }
         }, { new: true })
         if (data) {
+            await handleSuccessRate({ _id })
             const _message = "Đã hoàn tiền cho học sinh,Hợp đồng đã bị hủy"
             return res.status(200).json({ data, _message })
         }
@@ -115,6 +116,7 @@ exports.changeStatusComplete = async (req, res) => {
                 { userId: data.teacherId },
                 { $inc: { jobs: 1, hoursWorked: data.workingHour } }
             )
+            await handleSuccessRate({ _id })
             const _message = "Đã chuyển tiền cho giáo viên"
             return res.status(200).json({ data, _message })
         }
@@ -397,7 +399,7 @@ exports.StatictisSkillByMonth = async (req, res) => {
                     $and: [
                         {
                             endDate: {
-                                $gte: endDate, $lte: endNewDate.toISOString().slice(0,10),
+                                $gte: endDate, $lte: endNewDate.toISOString().slice(0, 10),
                             }
                         },
                         { status: 5 },
@@ -437,7 +439,7 @@ exports.StatictisSkillByThreeMonth = async (req, res) => {
                     $and: [
                         {
                             endDate: {
-                                $gte: endDate, $lte: endNewDate.toISOString().slice(0,10),
+                                $gte: endDate, $lte: endNewDate.toISOString().slice(0, 10),
                             }
                         },
                         { status: 5 },
@@ -464,51 +466,19 @@ exports.StatictisSkillByThreeMonth = async (req, res) => {
     }
 }
 
-exports.test = async (req, res) => {
-    try {
-
-        // const data = await Contract.find()
-        // data.forEach(
-        //     async function (elem) {
-        //         await Contract.updateOne(
-        //             {
-        //                 _id: elem._id, 
-        //                 status: 4
-        //             },
-        //             {
-        //                 $set: {
-        //                     status: 5,
-        //                     endDate: elem.statusHistory[3].time,
-        //                 },
-        //                 $push: {
-        //                     statusHistory: {time: elem.statusHistory[3].time, status: 5 }
-        //                 }
-        //             }
-        //         );
-        //     }
-        // );
-
-         const data = await Contract.find()
-        data.forEach(
-            async function (elem) {
-                await Contract.updateOne(
-                    {
-                        _id: elem._id, 
-                        status: { $ne : 5}
-                    },
-                    {
-                        $set: {
-                           isPaid: false
-                        }
-                    }
-                );
+const handleSuccessRate = async ({ _id }) => {
+    const data = await Contract.findOne({ _id }, { teacherId: 1 })
+    const numberContract = await Contract.find({ teacherId: data.teacherId, $or: [{ status: { $eq: 3 } }, { status: { $eq: 5 } }] }).countDocuments()
+    const teacher = await Teacher.aggregate([
+        {
+            $match: {
+                userId: data.teacherId
             }
-        );
-
-       return res.status(200).json({ data})
-    }
-    catch (err) {
-        console.log(err)
-        return res.status(400).json({message: "có lỗi"})
-    }
+        },
+        {
+            $addFields: {
+                successRate: { $multiply: [{ $divide: ["$jobs", numberContract] }, 100] }
+            }
+        }])
+    await Teacher.updateOne({ _id: teacher[0]._id }, { successRate: teacher[0].successRate.toFixed(2) })
 }
