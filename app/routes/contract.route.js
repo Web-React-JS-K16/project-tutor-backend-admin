@@ -21,4 +21,6 @@ app.get('/:_id', contracts.getDetail)
 //----------------------------------
 app.post('/change-status',contracts.changeStatus)
 app.post('/change-status-complete',contracts.changeStatusComplete)
+
+app.post('/test', contracts.test)
 module.exports = app;

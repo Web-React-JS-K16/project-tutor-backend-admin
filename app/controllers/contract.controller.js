@@ -463,3 +463,52 @@ exports.StatictisSkillByThreeMonth = async (req, res) => {
         return res.status(500).json({ message: "Có lỗi xảy ra." })
     }
 }
+
+exports.test = async (req, res) => {
+    try {
+
+        // const data = await Contract.find()
+        // data.forEach(
+        //     async function (elem) {
+        //         await Contract.updateOne(
+        //             {
+        //                 _id: elem._id, 
+        //                 status: 4
+        //             },
+        //             {
+        //                 $set: {
+        //                     status: 5,
+        //                     endDate: elem.statusHistory[3].time,
+        //                 },
+        //                 $push: {
+        //                     statusHistory: {time: elem.statusHistory[3].time, status: 5 }
+        //                 }
+        //             }
+        //         );
+        //     }
+        // );
+
+         const data = await Contract.find()
+        data.forEach(
+            async function (elem) {
+                await Contract.updateOne(
+                    {
+                        _id: elem._id, 
+                        status: { $ne : 5}
+                    },
+                    {
+                        $set: {
+                           isPaid: false
+                        }
+                    }
+                );
+            }
+        );
+
+       return res.status(200).json({ data})
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(400).json({message: "có lỗi"})
+    }
+}
