@@ -374,6 +374,7 @@ exports.StatictisSkillByWeek = async (req, res) => {
         ])
 
         if (data.length > 0) {
+            console.log(Helpers.handleData({ data }))
             return res.status(200).json({ data: Helpers.handleData({ data }) })
         }
         else {
