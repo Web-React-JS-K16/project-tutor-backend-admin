@@ -157,7 +157,6 @@ exports.delete = async (req, res) => {
     }
 
     try {
-
         const result = await Tag.findOneAndDelete({ _id })
         if (result) {
             return res.status(200).json({ message: "Xóa tag kĩ năng thành công.", data: result })

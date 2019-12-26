@@ -59,6 +59,8 @@ exports.getDetail = async (req, res) => {
                     path: "studentId",
                     select: ["-password", "-passwordHash", "-hashedPassword"],
                     populate: [{ path: 'district' }, { path: 'city' }],
+                },{
+                    path: "tags._id"
                 }],
             })
 
