@@ -107,7 +107,7 @@ exports.blockAccount = async (req, res) => {
           .populate('tags._id')
 
         if (data) {
-          return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa.",data })
+          return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã bị khóa.",data })
         }
 
         return res.status(400).json({ message: "Tài khoản không tồn tại." });
