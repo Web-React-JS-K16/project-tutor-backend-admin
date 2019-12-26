@@ -3,6 +3,9 @@ const User = require("../models/user.model");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const jwtSecretConfig = require("../../config/jwt-secret.config");
+const EUserTypes = require("../enums/EUserTypes")
+const Student = require("../models/student.model");
+const Teacher = require("../models/teacher.model");
 
 // Retrieving and return all admins to the database
 exports.findAll = async (req, res) => {
@@ -90,14 +93,34 @@ exports.login = async (req, res) => {
 exports.blockAccount = async (req, res) => {
   const { _id } = req.body
   try {
-    const user = await User.findOneAndUpdate({ _id }, { isBlock: true }, { new: true });
+    const user = await User.findOneAndUpdate({ _id }, { isBlock: true }, { new: true })
 
     if (user) {
-      return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã bị khóa.", data: {userId: user} })
-    }
+      const { typeID } = user
+      if (parseInt(typeID) === EUserTypes.TEACHER) {
+        const data = await Teacher.findOne({ userId: _id })
+          .populate({
+            path: 'userId',
+            select: ['-password', '-passwordHash'],
+            populate: [{ path: 'district' }, {path: 'city'}],
+          })
+          .populate('tags._id')
 
-    else {
-      return res.status(400).json({ message: "Không tìm thấy tài khoản." })
+        if (data) {
+          return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa.",data })
+        }
+
+        return res.status(400).json({ message: "Tài khoản không tồn tại." });
+      }
+      else {
+        const data = await Student.findOne({ userId: _id })
+          .populate({
+            path: 'userId',
+            select: ['-password', '-passwordHash'],
+            populate: [{ path: 'district' }, {path: 'city'}],
+          })
+          return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã bị khóa.", data })
+      }
     }
   }
   catch (err) {
@@ -115,12 +138,33 @@ exports.upBlockAccount = async (req, res) => {
 
   try {
     const user = await User.findOneAndUpdate({ _id }, { isBlock: false }, { new: true });
+    
     if (user) {
-      return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa.",data: {userId: user} })
-    }
+      const { typeID } = user
+      if (parseInt(typeID) === EUserTypes.TEACHER) {
+        const data = await Teacher.findOne({ userId: _id })
+          .populate({
+            path: 'userId',
+            select: ['-password', '-passwordHash'],
+            populate: [{ path: 'district' }, {path: 'city'}],
+          })
+          .populate('tags._id')
 
-    else {
-      return res.status(400).json({ message: "Không tìm thấy tài khoản." })
+        if (data) {
+          return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa.",data })
+        }
+
+        return res.status(400).json({ message: "Tài khoản không tồn tại." });
+      }
+      else {
+        const data = await Student.findOne({ userId: _id })
+          .populate({
+            path: 'userId',
+            select: ['-password', '-passwordHash'],
+            populate: [{ path: 'district' }, {path: 'city'}],
+          })
+          return res.status(200).json({ message: "Tài khoản " + user.displayName + " đã mở khóa.",data })
+      }
     }
   }
   catch (err) {
